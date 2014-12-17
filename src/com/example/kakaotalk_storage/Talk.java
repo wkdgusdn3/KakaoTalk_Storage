@@ -7,6 +7,7 @@ import java.io.InputStreamReader;
 
 import android.content.Intent;
 import android.graphics.Color;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.v7.app.ActionBarActivity;
@@ -59,7 +60,8 @@ public class Talk extends ActionBarActivity {
 
 		Thread read_Thread = new Thread() {
 			public void run() {
-				readText();		
+				ReadText readText = new ReadText();
+				readText.execute();
 			}
 		};
 
@@ -90,7 +92,7 @@ public class Talk extends ActionBarActivity {
 		}
 	}
 
-	void readText() {
+	/*void readText() {
 
 		String temp;
 		int i = 0;
@@ -114,78 +116,121 @@ public class Talk extends ActionBarActivity {
 				loading.setVisibility(View.INVISIBLE);	
 			}
 		});
-	}
+	}*/
 
-	void splitTalk(String talkLine) {
-		String parseTalk[];
-		String parseTalk2[];
 
-		parseTalk = talkLine.split(", ");	// 날짜 parsing
-		if(parseTalk[0].equals("")) {
 
-		} else if(parseTalk.length == 1) {
-			if(parseTalk[0].length() <= 1) {
-				addTalk(parseTalk[0], typeTalk);
-			}
-			else if(parseTalk[0].substring(0, 2).equals("20")) {
-				addTalk(parseTalk[0], 2);	
-			} else {
-				addTalk(parseTalk[0], typeTalk);
-			}
-
+	class ReadText extends AsyncTask<String, String, String> {
+		protected void onPreExcute() {
 		}
-		else {
-			if(parseTalk[0].substring(0, 2).equals("20"))
-			{
-				parseTalk2 = parseTalk[1].split(" : ");
 
-				// typeTalk 0 -> 내 대화
-				// typeTalk 1 -> 상대방 대화
-				// typeTalk 2 -> 그 외 대화
+		protected String doInBackground(String ... values) {
 
-				if(parseTalk2[0].equals("회원님")) {
+			String temp;
+			int i = 0;
 
-					addTalk(parseTalk2[1], 0);
-
-					typeTalk = 0;
-				} else {
-
-					if(parseTalk2.length == 1) {
-						addTalk(parseTalk2[0], 2);
-						typeTalk = 2;
-
+			try {
+				while((temp = buff.readLine()) != null) {
+					if(i > 3) {
+						splitTalk(temp);
 					} else {
-						addTalk(parseTalk2[1], 1);
-						typeTalk = 1;
+						i++;
 					}
+
 				}
-			} else {
-				addTalk(talkLine, typeTalk);
+			}
+			catch(Exception e) {
+				e.printStackTrace();
+			}
+
+			handler.post(new Runnable() {
+				public void run() {
+					loading.setVisibility(View.INVISIBLE);					
+				}
+			});
+			
+			return "";
+		}
+
+		void splitTalk(String talkLine) {
+			String parseTalk[];
+			String parseTalk2[];
+
+			parseTalk = talkLine.split(", ");	// 날짜 parsing
+			if(parseTalk[0].equals("")) {
+
+			} else if(parseTalk.length == 1) {
+				if(parseTalk[0].length() <= 1) {
+					addTalk(parseTalk[0], typeTalk);
+				}
+				else if(parseTalk[0].substring(0, 2).equals("20")) {
+					addTalk(parseTalk[0], 2);	
+				} else {
+					addTalk(parseTalk[0], typeTalk);
+				}
+
+			}
+			else {
+				if(parseTalk[0].substring(0, 2).equals("20"))
+				{
+					parseTalk2 = parseTalk[1].split(" : ");
+
+					// typeTalk 0 -> 내 대화
+					// typeTalk 1 -> 상대방 대화
+					// typeTalk 2 -> 그 외 대화
+
+					if(parseTalk2[0].equals("회원님")) {
+
+						publishProgress(parseTalk2[1], ""+0);
+
+						typeTalk = 0;
+					} else {
+
+						if(parseTalk2.length == 1) {
+							publishProgress(parseTalk2[0], ""+2);
+							typeTalk = 2;
+
+						} else {
+							publishProgress(parseTalk2[1], ""+1);
+							typeTalk = 1;
+						}
+					}
+				} else {
+					publishProgress(talkLine, ""+typeTalk);
+				}
 			}
 		}
-	}
 
-	void addTalk(String talk, int talkType) {
+		void addTalk(String talk, int talkType) {
 
-		TextView textView = new TextView(getApplicationContext());
-		textView.setText(talk);
 
-		if(talkType == 0) {				// 내 대화
-			textView.setGravity(Gravity.END);
-			textView.setTextColor(Color.parseColor("#5CD1E5"));
-		} else if(talkType == 1){		// 상대방 대화
-			textView.setTextColor(Color.parseColor("#F361A6"));
-		} else {
-			textView.setGravity(Gravity.CENTER);
-			textView.setTextColor(Color.parseColor("#ffffff"));
-			textView.setBackgroundColor(Color.parseColor("#8C8C8C"));
+		}
+		
+		protected void onProgressUpdate(String ... values) {
+			
+			TextView textView = new TextView(getApplicationContext());
+			textView.setText(values[0]);
+
+			if(values[1].equals("0")) {				// 내 대화
+				textView.setGravity(Gravity.END);
+				textView.setTextColor(Color.parseColor("#5CD1E5"));
+			} else if(values[1].equals("1")){		// 상대방 대화
+				textView.setTextColor(Color.parseColor("#F361A6"));
+			} else {
+				textView.setGravity(Gravity.CENTER);
+				textView.setTextColor(Color.parseColor("#ffffff"));
+				textView.setBackgroundColor(Color.parseColor("#8C8C8C"));
+			}
+
+			LinearLayout.LayoutParams p = new LinearLayout.LayoutParams(
+					LinearLayout.LayoutParams.MATCH_PARENT,
+					LinearLayout.LayoutParams.WRAP_CONTENT);
+
+			linearLayout.addView(textView, p);
+			
 		}
 
-		LinearLayout.LayoutParams p = new LinearLayout.LayoutParams(
-				LinearLayout.LayoutParams.MATCH_PARENT,
-				LinearLayout.LayoutParams.WRAP_CONTENT);
-
-		linearLayout.addView(textView, p);
-
+		protected void onPostExcute(String result) {
+		}
 	}
 }
