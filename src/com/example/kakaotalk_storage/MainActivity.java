@@ -141,11 +141,9 @@ public class MainActivity extends ActionBarActivity {
 
 	void setListViewOnClickListener() {
 
-
 		listView.setOnItemClickListener(new OnItemClickListener() {
 			@Override
 			public void onItemClick(AdapterView<?> arg0, View arg1, int arg2, long arg3) {
-
 
 				Intent talk = new Intent(getApplicationContext(), Talk.class);
 				talk.putExtra("PATH", chatPath[arg2]);

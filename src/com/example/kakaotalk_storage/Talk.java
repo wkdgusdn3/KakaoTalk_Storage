@@ -30,6 +30,9 @@ public class Talk extends ActionBarActivity {
 	private Handler handler;
 	private String talk_tmp;
 	private int talkType_tmp;
+	private String talkarr[];
+	private int talk_i = 0;
+	private int talk_j = 0;
 
 	private LinearLayout linearLayout;
 	private TextView talk;
@@ -37,6 +40,8 @@ public class Talk extends ActionBarActivity {
 
 	TextView textView_tmp;
 	LinearLayout.LayoutParams p_tmp;
+
+	TextView textView;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -161,35 +166,26 @@ public class Talk extends ActionBarActivity {
 	}
 
 	void addTalk(String talk, int talkType) {
-		talk_tmp = talk;
-		talkType_tmp = talkType;
-		Log.v("wkdgusdn3", "☆" + talk_tmp);
 
 		TextView textView = new TextView(getApplicationContext());
-		textView.setText(talk_tmp);
-		LinearLayout.LayoutParams p = new LinearLayout.LayoutParams(
-				LinearLayout.LayoutParams.MATCH_PARENT,
-				LinearLayout.LayoutParams.WRAP_CONTENT);
+		textView.setText(talk);
 
-		if(talkType_tmp == 0) {				// 내 대화
+		if(talkType == 0) {				// 내 대화
 			textView.setGravity(Gravity.END);
 			textView.setTextColor(Color.parseColor("#5CD1E5"));
-		} else if(talkType_tmp == 1){		// 상대방 대화
+		} else if(talkType == 1){		// 상대방 대화
 			textView.setTextColor(Color.parseColor("#F361A6"));
 		} else {
 			textView.setGravity(Gravity.CENTER);
 			textView.setTextColor(Color.parseColor("#ffffff"));
 			textView.setBackgroundColor(Color.parseColor("#8C8C8C"));
 		}
-		
-		textView_tmp = textView;
-		p_tmp = p;
-		
-		handler.post(new Runnable() {
-			public void run() {
-				Log.v("wkdgusdn3", talk_tmp);
-				linearLayout.addView(textView_tmp, p_tmp);		
-			}
-		});
+
+		LinearLayout.LayoutParams p = new LinearLayout.LayoutParams(
+				LinearLayout.LayoutParams.MATCH_PARENT,
+				LinearLayout.LayoutParams.WRAP_CONTENT);
+
+		linearLayout.addView(textView, p);
+
 	}
 }
