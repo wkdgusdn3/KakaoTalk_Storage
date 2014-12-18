@@ -11,8 +11,11 @@ import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.v7.app.ActionBarActivity;
+import android.util.Log;
 import android.view.Gravity;
-import android.view.View;
+import android.view.animation.Animation;
+import android.view.animation.Animation.AnimationListener;
+import android.view.animation.AnimationUtils;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
@@ -24,6 +27,8 @@ public class Talk extends ActionBarActivity {
 	private int typeTalk = 0;	// 0->내대화, 1->상대대화
 	private String path;
 	private Handler handler;
+	private Animation loading_Anim;
+	private boolean isLoading = false;
 
 	private LinearLayout linearLayout;
 	private ImageView loading;
@@ -41,25 +46,41 @@ public class Talk extends ActionBarActivity {
 		handler = new Handler();
 
 		setView();
-
-		loading.setVisibility(View.VISIBLE);
+		setAnimation();
 
 		getPath();
 		openFile();		
+		
+		isLoading = true;
+		loading.startAnimation(loading_Anim);
 
-		Thread read_Thread = new Thread() {
-			public void run() {
-				ReadText readText = new ReadText();
-				readText.execute();
-			}
-		};
+		ReadText readText = new ReadText();
+		readText.execute();
 
-		read_Thread.start();
 	}
 
 	void setView() {
 		linearLayout = (LinearLayout)findViewById(R.id.linearLayout);
 		loading = (ImageView)findViewById(R.id.loading);
+	}
+
+	void setAnimation() {
+		loading_Anim = AnimationUtils.loadAnimation(this, R.anim.loading_anim);
+
+		loading_Anim.setAnimationListener(new AnimationListener() {
+			@Override
+			public void onAnimationStart(Animation animation) {
+			}
+			@Override
+			public void onAnimationRepeat(Animation animation) {
+			}
+			@Override
+			public void onAnimationEnd(Animation animation) {
+				if(isLoading) {
+					loading.startAnimation(loading_Anim);
+				}
+			}
+		});
 	}
 
 	void getPath() {
@@ -80,36 +101,8 @@ public class Talk extends ActionBarActivity {
 		}
 	}
 
-	/*void readText() {
-
-		String temp;
-		int i = 0;
-
-		try {
-			while((temp = buff.readLine()) != null) {
-				if(i > 3) {
-					splitTalk(temp);
-				} else {
-					i++;
-				}
-
-			}
-		}
-		catch(Exception e) {
-			e.printStackTrace();
-		}
-
-		handler.post(new Runnable() {
-			public void run() {
-				loading.setVisibility(View.INVISIBLE);	
-			}
-		});
-	}*/
-
-
-
 	class ReadText extends AsyncTask<String, String, String> {
-		protected void onPreExcute() {
+		protected void onPreExecute() {
 		}
 
 		protected String doInBackground(String ... values) {
@@ -131,12 +124,6 @@ public class Talk extends ActionBarActivity {
 				e.printStackTrace();
 			}
 
-			handler.post(new Runnable() {
-				public void run() {
-					loading.setVisibility(View.INVISIBLE);					
-				}
-			});
-			
 			return "";
 		}
 
@@ -149,12 +136,12 @@ public class Talk extends ActionBarActivity {
 
 			} else if(parseTalk.length == 1) {
 				if(parseTalk[0].length() <= 1) {
-					addTalk(parseTalk[0], typeTalk);
+					publishProgress(parseTalk[0], "" + typeTalk);
 				}
 				else if(parseTalk[0].substring(0, 2).equals("20")) {
-					addTalk(parseTalk[0], 2);	
+					publishProgress(parseTalk[0], "" + 2);	
 				} else {
-					addTalk(parseTalk[0], typeTalk);
+					publishProgress(parseTalk[0], "" + typeTalk);
 				}
 
 			}
@@ -189,13 +176,8 @@ public class Talk extends ActionBarActivity {
 			}
 		}
 
-		void addTalk(String talk, int talkType) {
-
-
-		}
-		
 		protected void onProgressUpdate(String ... values) {
-			
+
 			TextView textView = new TextView(getApplicationContext());
 			textView.setText(values[0]);
 
@@ -215,10 +197,12 @@ public class Talk extends ActionBarActivity {
 					LinearLayout.LayoutParams.WRAP_CONTENT);
 
 			linearLayout.addView(textView, p);
-			
+
 		}
 
-		protected void onPostExcute(String result) {
+		protected void onPostExecute(String result) {
+			Log.v("wkdgusdn3", "isLoading=false");
+			isLoading = false;
 		}
 	}
 }
