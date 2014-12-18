@@ -148,7 +148,6 @@ public class MainActivity extends ActionBarActivity {
 				Intent talk = new Intent(getApplicationContext(), Talk.class);
 				talk.putExtra("PATH", chatPath[arg2]);
 				startActivity(talk);
-
 			}
 		});
 	}

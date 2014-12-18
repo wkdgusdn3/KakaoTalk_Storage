@@ -11,7 +11,6 @@ import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.v7.app.ActionBarActivity;
-import android.util.Log;
 import android.view.Gravity;
 import android.view.View;
 import android.widget.ImageView;
@@ -22,21 +21,11 @@ public class Talk extends ActionBarActivity {
 
 	private FileInputStream fis;
 	private BufferedReader buff;
-	private String totalTalk = "";
-	private String arr[];
-	private String myTalk = "";
-	private String yourTalk = "";
 	private int typeTalk = 0;	// 0->내대화, 1->상대대화
 	private String path;
 	private Handler handler;
-	private String talk_tmp;
-	private int talkType_tmp;
-	private String talkarr[];
-	private int talk_i = 0;
-	private int talk_j = 0;
 
 	private LinearLayout linearLayout;
-	private TextView talk;
 	private ImageView loading;
 
 	TextView textView_tmp;
@@ -69,7 +58,6 @@ public class Talk extends ActionBarActivity {
 	}
 
 	void setView() {
-		talk = new TextView(this);
 		linearLayout = (LinearLayout)findViewById(R.id.linearLayout);
 		loading = (ImageView)findViewById(R.id.loading);
 	}
