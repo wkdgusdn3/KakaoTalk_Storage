@@ -3,20 +3,22 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent" >
 
-    <ScrollView
-        android:layout_width="330dp"
-        android:layout_height="wrap_content"
-        android:layout_centerHorizontal="true"
-        android:fadeScrollbars="false"
-        android:overScrollMode="always" >
+      <com.handmark.pulltorefresh.library.PullToRefreshScrollView
+        android:id="@+id/pull_refresh_list"
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
+        android:fadingEdge="none"
+        android:fastScrollEnabled="false"
+        android:footerDividersEnabled="false"
+        android:headerDividersEnabled="false"
+        android:smoothScrollbar="true" >
 
         <LinearLayout
             android:id="@+id/linearLayout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical" >
-        </LinearLayout>
-    </ScrollView>
+            android:orientation="vertical" />
+    </com.handmark.pulltorefresh.library.PullToRefreshScrollView>
 
     <ImageView
         android:id="@+id/loading"

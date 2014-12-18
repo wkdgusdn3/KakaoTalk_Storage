@@ -5,6 +5,11 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 
+import com.handmark.pulltorefresh.library.PullToRefreshBase;
+import com.handmark.pulltorefresh.library.PullToRefreshScrollView;
+import com.handmark.pulltorefresh.library.PullToRefreshBase.Mode;
+import com.handmark.pulltorefresh.library.PullToRefreshBase.OnRefreshListener;
+
 import android.content.Intent;
 import android.graphics.Color;
 import android.os.AsyncTask;
@@ -18,7 +23,9 @@ import android.view.animation.Animation.AnimationListener;
 import android.view.animation.AnimationUtils;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.ScrollView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 public class Talk extends ActionBarActivity {
 
@@ -29,9 +36,11 @@ public class Talk extends ActionBarActivity {
 	private Handler handler;
 	private Animation loading_Anim;
 	private boolean isLoading = false;
+	private boolean isFirst = false;
 
 	private LinearLayout linearLayout;
 	private ImageView loading;
+	private PullToRefreshScrollView mPullRefresh;
 
 	TextView textView_tmp;
 	LinearLayout.LayoutParams p_tmp;
@@ -50,18 +59,22 @@ public class Talk extends ActionBarActivity {
 
 		getPath();
 		openFile();		
-		
-		isLoading = true;
-		loading.startAnimation(loading_Anim);
 
 		ReadText readText = new ReadText();
 		readText.execute();
+		
+		setPullToRefresh();
+
+		isLoading = true;
+		loading.startAnimation(loading_Anim);
+		isFirst = true;
 
 	}
 
 	void setView() {
 		linearLayout = (LinearLayout)findViewById(R.id.linearLayout);
 		loading = (ImageView)findViewById(R.id.loading);
+		mPullRefresh = (PullToRefreshScrollView) findViewById(R.id.pull_refresh_list);
 	}
 
 	void setAnimation() {
@@ -82,16 +95,32 @@ public class Talk extends ActionBarActivity {
 			}
 		});
 	}
+	
+	void setPullToRefresh() {
+		mPullRefresh.setMode(Mode.PULL_FROM_END);
+		mPullRefresh.setPullLabel("당겨서 대화 추가");
+		mPullRefresh.setReleaseLabel("놓아서 대화 추가");
+		
+		mPullRefresh
+		.setOnRefreshListener(new OnRefreshListener<ScrollView>() {
+			@Override
+			public void onRefresh(
+					PullToRefreshBase<ScrollView> refreshView) {
+				
+				ReadText readText = new ReadText();
+				readText.execute();
+				
+				mPullRefresh.onRefreshComplete();
+			}
+		});
+	}
 
 	void getPath() {
-
 		Intent intent = getIntent();
 		path = intent.getExtras().getString("PATH").toString();
-
 	}
 
 	void openFile() {
-
 		try {
 			fis = new FileInputStream(path);
 			buff = new BufferedReader(new InputStreamReader(fis));
@@ -109,20 +138,34 @@ public class Talk extends ActionBarActivity {
 
 			String temp;
 			int i = 0;
-
+			
 			try {
-				while((temp = buff.readLine()) != null) {
-					if(i > 3) {
-						splitTalk(temp);
+				while(i < 1000) {
+					if((temp = buff.readLine()) == null) {
+						Log.v("wkdgusdn3", "" + i);
+						if(i == 0) { 
+							handler.post(new Runnable() {
+								public void run() {
+									Toast.makeText(getApplicationContext(), "마지막입니다.", Toast.LENGTH_LONG).show();
+								}
+							});
+						}
+						break;
+					}
+					
+					if(i < 3 && isFirst) {
+						i++;
 					} else {
+						splitTalk(temp);
 						i++;
 					}
-
 				}
 			}
 			catch(Exception e) {
 				e.printStackTrace();
 			}
+			
+			isFirst = false;
 
 			return "";
 		}
@@ -201,7 +244,6 @@ public class Talk extends ActionBarActivity {
 		}
 
 		protected void onPostExecute(String result) {
-			Log.v("wkdgusdn3", "isLoading=false");
 			isLoading = false;
 		}
 	}
