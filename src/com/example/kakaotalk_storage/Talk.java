@@ -59,16 +59,15 @@ public class Talk extends ActionBarActivity {
 
 		getPath();
 		openFile();		
+		
+		isLoading = true;
+		loading.startAnimation(loading_Anim);
+		isFirst = true;
 
 		ReadText readText = new ReadText();
 		readText.execute();
 		
 		setPullToRefresh();
-
-		isLoading = true;
-		loading.startAnimation(loading_Anim);
-		isFirst = true;
-
 	}
 
 	void setView() {
@@ -107,6 +106,8 @@ public class Talk extends ActionBarActivity {
 			public void onRefresh(
 					PullToRefreshBase<ScrollView> refreshView) {
 				
+				loading.startAnimation(loading_Anim);
+				
 				ReadText readText = new ReadText();
 				readText.execute();
 				
@@ -131,8 +132,6 @@ public class Talk extends ActionBarActivity {
 	}
 
 	class ReadText extends AsyncTask<String, String, String> {
-		protected void onPreExecute() {
-		}
 
 		protected String doInBackground(String ... values) {
 
@@ -140,9 +139,8 @@ public class Talk extends ActionBarActivity {
 			int i = 0;
 			
 			try {
-				while(i < 1000) {
+				while(i < 500) {
 					if((temp = buff.readLine()) == null) {
-						Log.v("wkdgusdn3", "" + i);
 						if(i == 0) { 
 							handler.post(new Runnable() {
 								public void run() {
@@ -172,12 +170,14 @@ public class Talk extends ActionBarActivity {
 
 		void splitTalk(String talkLine) {
 			String parseTalk[];
-			String parseTalk2[];
+			String parseTalk2[];	// 대화 parsing
+			String parseTalk3[];	// 날짜 parsing
+			String time;
 
 			parseTalk = talkLine.split(", ");	// 날짜 parsing
 			if(parseTalk[0].equals("")) {
 
-			} else if(parseTalk.length == 1) {
+			} else if(parseTalk.length == 1) {	// 엔터만 쳤을 때
 				if(parseTalk[0].length() <= 1) {
 					publishProgress(parseTalk[0], "" + typeTalk);
 				}
@@ -186,35 +186,45 @@ public class Talk extends ActionBarActivity {
 				} else {
 					publishProgress(parseTalk[0], "" + typeTalk);
 				}
-
 			}
 			else {
 				if(parseTalk[0].substring(0, 2).equals("20"))
 				{
 					parseTalk2 = parseTalk[1].split(" : ");
+					
+					if(parseTalk[0].split("오전").length == 2) {	// 오전
+						parseTalk3 = parseTalk[0].split("오전");
+						time = "(오전" + parseTalk3[1] + ")";
+					}
+					else {										// 오후
+						parseTalk3 = parseTalk[0].split("오후");
+						time = "(오후" + parseTalk3[1] + ")";
+					}
+					
+					Log.v("wkdgusdn3", time);
 
 					// typeTalk 0 -> 내 대화
 					// typeTalk 1 -> 상대방 대화
-					// typeTalk 2 -> 그 외 대화
+					// typeTalk 2 -> 그 외 대화(날짜)
 
 					if(parseTalk2[0].equals("회원님")) {
 
-						publishProgress(parseTalk2[1], ""+0);
+						publishProgress(time + " " + parseTalk2[1], "" + 0);
 
 						typeTalk = 0;
 					} else {
 
 						if(parseTalk2.length == 1) {
-							publishProgress(parseTalk2[0], ""+2);
+							publishProgress(parseTalk2[0], "" + 2);
 							typeTalk = 2;
 
 						} else {
-							publishProgress(parseTalk2[1], ""+1);
+							publishProgress(parseTalk2[1] + " " + time, "" + 1);
 							typeTalk = 1;
 						}
 					}
 				} else {
-					publishProgress(talkLine, ""+typeTalk);
+					publishProgress(talkLine, "" + typeTalk);
 				}
 			}
 		}
@@ -240,7 +250,6 @@ public class Talk extends ActionBarActivity {
 					LinearLayout.LayoutParams.WRAP_CONTENT);
 
 			linearLayout.addView(textView, p);
-
 		}
 
 		protected void onPostExecute(String result) {
